@@ -1,0 +1,12 @@
+Features:
+
+Account creation
+Passwords
+Exchange market
+
+Planned:
+
+Modularisation
+Learning track from addition to machine learning
+Achievements
+Spending catalogue

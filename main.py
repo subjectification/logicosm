@@ -100,9 +100,9 @@ def read_database():
             name = os.path.split(filename)[1].split(".")[0]
             file = open(filename, "r")
             if os.stat(filename).st_size == 0:
-                accounts.append(account(name, 100,"password"))
+                accounts.append(account(name, 100,hash("password")))
             else:
-                accounts.append(account(name, int(file.readline()), file.readline()))
+                accounts.append(account(name, int(file.readline()), file.readline().rstrip()))
             for asset in investments:
                 accounts[count].portfolio[asset] = 0
             for line in file:
