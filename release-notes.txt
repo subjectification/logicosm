@@ -6,7 +6,8 @@ Exchange market
 
 Planned:
 
-Modularisation
+Adjust exchange formulas
+Spending catalogue
 Learning track from addition to machine learning
 Achievements
-Spending catalogue
+
