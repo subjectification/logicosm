@@ -86,9 +86,9 @@ def calcPrice(tick, history):
     difference = today - datetime.datetime(2000,1,1)
     num = difference.days - history
     return {
-        investments[0] : (num % 2) + 1,
-        investments[1] : (num % 3) + 2,
-        investments[2] : int(round(math.sin(num)* 6 + 6))}[tick]
+        investments[0] : (num % 2) + 50,
+        investments[1] : (num % 3) + 48,
+        investments[2] : int(round(math.sin(num)* 6 + 50))}[tick]
           
 
 def read_accounts():
@@ -130,19 +130,7 @@ def load_account(name):
         if t in investments:
             current_account.portfolio[t] = int(lst[1])
     return (0.1, "Successfully logged in!")
-            #file = open(filename, "r")
-            #if os.stat(filename).st_size == 0:
-            #    accounts.append(account(name, 100,hash("password")))
-            #else:
-            #    accounts.append(account(name, int(file.readline()), file.readline().rstrip()))
-            #for asset in investments:
-            #    accounts[count].portfolio[asset] = 0
-            #for line in file:
-            #    lst = line.split(",")
-            #    t = lst[0]
-            #    if t in investments:
-            #        accounts[count].portfolio[t] = int(lst[1])
-            #count += 1
+
 
 def createAcc():
     name = input("Please enter a name for the new account:")
@@ -292,24 +280,32 @@ def interface():
     elif state == 3.1:      #Exchange: buying
         printInvestments()
         print_balance()
-        inp = ("What would you like to buy?\n")
-        if inp.isdigit() and int(inp) < len(investments):
+        inp = input("What would you like to buy? Or press 'e' to return to the main exchange market, or 'q' to return to the main menu\n")
+        if inp == 'e':
+            return (3, "Exchange market")
+        elif inp == 'q':
+            return (0.1, "Welcome!")
+        elif inp.isdigit() and int(inp) < len(investments):
             n = input("How much " + investments[int(imp)] + " would you like to buy?\n")
             return current_account.buy(inp, int(n))
-        elif n.upper() in investments:
-            n = input("How much " + n.upper() + " would you like to buy?\n")
+        elif inp.upper() in investments:
+            n = input("How much " + inp.upper() + " would you like to buy?\n")
             return current_account.buy(inp.upper(), int(n))
         else:
             return (3.1, "I don't know what that is :(")
     elif state == 3.2:       #Exchange: selling
         printInvestments()
         print_portfolio()
-        inp = ("What would you like to sell?\n")
-        if inp.isdigit() and int(inp) <= len(investments):
-            n = input("How much " + investments[int(imp)] + " would you like to sell?\n")
+        inp = input("What would you like to sell? Or press 'e' to return to the main exchange market, or 'q' to return to the main menu\n")
+        if inp == 'e':
+            return (3, "Exchange market")
+        elif inp == 'q':
+            return (0.1, "Welcome!")
+        elif inp.isdigit() and int(inp) <= len(investments):
+            n = input("How much " + investments[int(inp)] + " would you like to sell?\n")
             return current_account.sell(inp, int(n))
-        elif n.upper() in investments:
-            n = input("How much " + n.upper() + " would you like to sell?\n")
+        elif inp.upper() in investments:
+            n = input("How much " + inp.upper() + " would you like to sell?\n")
             return current_account.sell(inp.upper(), int(n))
         else:
             return (3.2, "I don't know what that is :(")
