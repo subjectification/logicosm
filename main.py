@@ -47,9 +47,7 @@ class account:
         self.password = pas
         self.balance = bal
         self.portfolio = {}
-        #global current_account
-        #current_account = self
-        #save()
+        self.expertise = {}
 	
     def add(self, amount):
         self.balance += amount
@@ -79,6 +77,9 @@ class account:
             return (3.2, "Successfully sold " + number + " " + ticker)
         else:
             return (3.2, "You don't own that many :(")
+            
+    def experience(self, skill, xp):
+        self.expertise[skill] += xp
 
 
 def calcPrice(tick, history):
@@ -126,9 +127,13 @@ def load_account(name):
         current_account.portfolio[asset] = 0
     for line in file:
         lst = line.split(",")
-        t = lst[0]
-        if t in investments:
-            current_account.portfolio[t] = int(lst[1])
+        if lst[0] == 'i':
+            t = lst[1]
+            if t in investments:
+                current_account.portfolio[t] = int(lst[2])
+        elif lst[0] == 'e':
+            s = lst[1]
+            current_account.expertise[s] = int(lst[2])
     return (0.1, "Successfully logged in!")
 
 
@@ -155,7 +160,9 @@ def save():
     file.write(str(current_account.password) + "\n")
     file.write(str(current_account.balance) + "\n")
     for asset in current_account.portfolio:
-        file.write(asset + "," + str(current_account.portfolio[asset]) + "\n")
+        file.write("i," + asset + "," + str(current_account.portfolio[asset]) + "\n")
+    for skill in current_account.expertise:
+        file.write("e," + skill + "," + str(current_account.expertise[skill]) + "\n")
     file.close()
 
 def quit():
