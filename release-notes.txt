@@ -8,6 +8,6 @@ Planned:
 
 Adjust exchange formulas
 Spending catalogue
-Learning track from addition to machine learning
+Learning track from addition to machine learning (arithmetic/probability/sequences)
 Achievements
 

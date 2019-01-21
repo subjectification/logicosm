@@ -6,6 +6,7 @@ import sys
 import readchar
 
 accounts = []
+prizes = []
 investments = ["FOOD", "HOUSE", "CLOTH"]
 state = 0   # Which interface is displayed
             # 0: Choose account
@@ -106,10 +107,12 @@ def read_accounts():
 def clear():
     os.system('cls||clear')
 
-# print the information associated with the current account - unneccessary?
-def printAcc():
-    print (current_account.name + "'s balance: \t" + str(current_account.balance) + "\n")
-    print (current_account.name + "'s portfolio:")
+# print the information associated with the current account
+def print_balance():
+    print ("\n" + current_account.name + "'s balance: \t" + str(current_account.balance))
+
+def print_portfolio():
+    print ("\n" + current_account.name + "'s portfolio:")
     for asset in current_account.portfolio:
         print (asset + ":\t\t\t" + str(current_account.portfolio[asset]))
 
@@ -155,7 +158,7 @@ def createAcc():
         return (0.1, "Successfully created account!")
 
 def printInvestments():
-    print ("Today's investment prices:")
+    print ("\nToday's investment prices:")
     for asset in investments:
         print (asset + ":\t\t\t" + str(calcPrice(asset,0)))
 
@@ -171,17 +174,10 @@ def quit():
     save()
     clear()
     sys.exit()
-
-def refresh():
-    clear()
-    global status
-    global state
-    print(status + "\n\n")
-    (state, status) = interface()
     
 def select_account():
     if len(accounts) > 0:
-        print ("Which account would you like to access? Or press 'n' to create a new account")
+        print ("\nWhich account would you like to access? Or press 'n' to create a new account")
         for index,(name,truepw) in enumerate(accounts):
             print(str(index) + ": " + name)
         n = input("")
@@ -205,7 +201,7 @@ def select_account():
         else:
             return (0, "I didn't understand what you wrote :(")
     else:
-        print("No accounts detected!")
+        print("\nNo accounts detected!")
         return createAcc()
 
 def printHistory(days):
@@ -215,38 +211,32 @@ def printHistory(days):
             print (str(calcPrice(asset,i)) + ", ", end="")
         print(str(calcPrice(asset,0)))
         
+def read_prizes():
+    global prizes
+    file = open(os.path.join(path,"prizes.config"), "r")
+    for line in file:
+        info = line.split(",")
+        prizes.append((info[0],info[1].rstrip()))
+
+def refresh():
+    clear()
+    global status
+    global state
+    print(status)
+    (state, status) = interface()
 
 def interface():
     if state == 0:          # account not selected
         read_accounts()
         return select_account()
-        #if selectAcc():
-        #    return (1, "Successfully logged in!")
-        #else:
-        #    return (0, "There was a problem with your username or password, please try again")
     elif state == 0.1:           # account selected, main screen
-        print("1:\tLearning path\n2:\tPrize shop\n3:\tExchange market\n4:\tAchievements\n5:\tAdd money\n\nOr press 'q' to save and quit\n")
+        print_balance()
+        print("\n1:\tLearning path\n2:\tPrize shop\n3:\tExchange market\n4:\tAchievements\n5:\tAdd money\n\nOr press 'q' to save and quit\n")
         inp = input("")
         if inp == '1':
             return(1, "Learning path has not yet been built")
-            
-            #pw = input("Please enter the password to unlock this feature:")
-            #if pw != password:
-            #    return (1, "Sorry! That is the wrong password!")
-            #num = input("How much would you like to add?\n")
-            #current_account.add(int(num))
-            #return (1, "Successfully added " + num)
         elif inp == '2':
-            return (2,"Prize shop has not yet been built")
-            #pw = input("Please enter the password to unlock this feature:")
-            #if pw != password:
-            #    return (1, "Sorry! That is the wrong password!")
-            #num = input("How much would you like to spend?\n")
-            #if int(num) <= current_account.balance:
-            #    current_account.subtract(int(num))
-            #    return (1, "Successfully spent " + num + "!")
-            #else:
-            #    return (1, "You don't have that much!")
+            return (2,"Prize shop")
         elif inp == '3':
             return (3, "Exchange market")
         elif inp == '4':
@@ -261,44 +251,33 @@ def interface():
                 return (0.1, "Successfully added $" + num + "!")
         elif inp == 'q':
             quit()
-            #global hist_length
-            #hist_length = input("How many days back do you want to display prices for?")
-            #return (4, "Price history")
         else:
             return (0.1, "I don't know what that means!")
     elif state == 1:          # Learning path
         t =  input("Press any key to return to the main screen\n")
         return (0.1, "Check back soon for learning path")
-        #if t == "q":
-        #    return (1, "Welcome!\n\n")
-        #if t not in investments:
-        #    return (2, "Please enter the name of a valid investment to purchase!")
-        #n = input("How much " + t + " would you like to buy? Or press q to return to the main screen\n")
-        #if n == "q":
-        #    return (1, "Welcome!\n\n")
-        #done = current_account.buy(t.upper(), int(n))
-        #if done == 1:
-        #    return (1, "Successfully purchased " + n + t.upper() + "!")
-        #else:
-        #    return (2, "There was a problem with your purchase, please try again")
+
     elif state == 2:          #prizes
-        t =  input("Press any key to return to the main screen\n")
-        return (0.1, "Check back later for the prize shop")
-        #if t == "q":
-        #    return (1, "Welcome!")
-        #if current_account.portfolio[t] <= 0:
-        #    return (3, "You do not have any of that investment to sell!")
-        #n = input("How much " + t + " would you like to sell? Or press q to return to the main screen\n")
-        #if n == "q":
-        #    return (1, "Welcome!")
-        #done = current_account.sell(t.upper(), int(n))
-        #if done == 1:
-        #    return (1, "Successfully sold " + n + t.upper() + "!")
-        #else:
-        #    return (2, "There was a problem with your sale, please try again")
+        for index, (prize, price) in enumerate(prizes):
+            print(str(index) + ":\t" + prize + " for $" + price)
+        print_balance()
+        t = input("\nWhich prize would you like to buy? Or, press 'q' to return to the main menu\n")
+        if t == 'q':
+            return (0.1, "Welcome!")
+        elif t.isdigit() and int(t) < len(prizes):
+            price = int(prizes[int(t)][1])
+            if current_account.balance >= price:
+                current_account.subtract(price)
+                return (2, "Successfully bought " + prizes[int(t)][0])
+            else:
+                return (2, "You can't afford that prize!")
+        else:
+            return (2, "That isn't an input I recognise :(")
+                    
     elif state == 3:       # Exchange market
         printInvestments()
-        printAcc()
+        print_balance()
+        print_portfolio()
         inp = input("Press 'b' to buy, 's' to sell, 'h' to check the history of prices, or 'q' to return to the main screen\n")
         if inp == 'b':
             return (3.1, "Exchange market: buying")
@@ -312,9 +291,9 @@ def interface():
             return (3, "I don't know what you want to do :(")
     elif state == 3.1:      #Exchange: buying
         printInvestments()
-        printAcc()
+        print_balance()
         inp = ("What would you like to buy?\n")
-        if inp.isdigit() and int(inp) <= len(investments):
+        if inp.isdigit() and int(inp) < len(investments):
             n = input("How much " + investments[int(imp)] + " would you like to buy?\n")
             return current_account.buy(inp, int(n))
         elif n.upper() in investments:
@@ -324,7 +303,7 @@ def interface():
             return (3.1, "I don't know what that is :(")
     elif state == 3.2:       #Exchange: selling
         printInvestments()
-        printAcc()
+        print_portfolio()
         inp = ("What would you like to sell?\n")
         if inp.isdigit() and int(inp) <= len(investments):
             n = input("How much " + investments[int(imp)] + " would you like to sell?\n")
@@ -356,6 +335,7 @@ def interface():
             return (3.3, "I don't know what that means :(")
     
     
-   
+read_prizes()
+
 while True:
     refresh()
