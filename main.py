@@ -10,14 +10,18 @@ import colorama
 accounts = []
 prizes = []
 investments = ["FOOD", "HOUSE", "CLOTH"]
-skills = ["ADDITION"]
+skills = ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"]
 threshold = 100 # when to unlock next skill
 combo = 0       # increases chance of receiving reward
 combo_increment = 5
 base_chance = 10
-max_chance = 60         
+max_chance = 60
 beep = '\a'
-
+ranks = [colorama.Fore.YELLOW + "RECRUIT" + colorama.Fore.RESET,
+    colorama.Fore.BLUE + "APPRENTICE" + colorama.Fore.RESET,
+    colorama.Fore.CYAN + "ADEPT" + colorama.Fore.RESET,
+    colorama.Fore.MAGENTA + "EXPERT" + colorama.Fore.RESET,
+    colorama.Fore.GREEN + "ORACLE" + colorama.Fore.RESET]
 if not os.path.exists("accounts"):
     os.mkdir("accounts")
 #path = os.path.dirname(os.path.abspath(__file__))
@@ -46,6 +50,23 @@ def save():
     for skill in current_account.expertise:
         file.write("e," + skill + "," + str(current_account.expertise[skill]) + "\n")
     file.close()
+
+def find_mastery(xp):
+
+    if xp > 800:
+        return ranks[5]
+    elif xp > 400:
+        return ranks[4]
+    elif xp > 200:
+        return ranks[3]
+    elif xp > 100:
+        return ranks[2]
+    elif xp > 50:
+        return ranks[1]
+    elif xp > 0:
+        return ranks[0]
+    else:
+        return colorama.Fore.RED + "Novice" + colorama.Fore.RESET
 
 class account:
     def __init__(self, input, pas, bal):
@@ -86,6 +107,7 @@ class account:
             
     def experience(self, skill, xp):
         self.expertise[skill] += xp
+        save()
 
 def calcPrice(tick, history):
     today = datetime.datetime.now()
@@ -128,6 +150,8 @@ def load_account(name):
     current_account = account(name, file.readline().rstrip(), int(file.readline()))
     for asset in investments:
         current_account.portfolio[asset] = 0
+    for skill in skills:
+        current_account.expertise[skill] = 0
     for line in file:
         lst = line.split(",")
         if lst[0] == 'i':
@@ -150,6 +174,8 @@ def createAcc():
         current_account = account(name, pw, 0)
         for asset in investments:
             current_account.portfolio[asset] = 0
+        for skill in skills:
+            current_account.expertise[skill] = 0
         save()
         refresh(0.1, "Successfully created account!")
 
@@ -226,7 +252,7 @@ def interface(state):
         elif inp == '3':
             refresh(3, "Exchange market")
         elif inp == '4':
-            refresh(4, "Acievements have not yet been built")
+            refresh(4, "Acievements")
         elif inp == '5':
             pw = input("Please enter the password to access this feature:")
             if pw != password:
@@ -329,7 +355,13 @@ def interface(state):
         else:
             refresh(3.3, "I don't know what that means :(")
     elif state == 4:        #Acievements
-        next = input("Achievements are not yet available. Press any key to return to the main menu.")
+        print(current_account.name + "'s mastery:")
+        for skill in skills:
+            if current_account.expertise[skill] > 0:
+                print(find_mastery(current_account.expertise[skill]) + "\t\t---\t\t" + skill)
+            else:
+                print(find_mastery(current_account.expertise[skill]) + "\t\t---\t\t???") 
+        next = input("Press any key to return to the main menu.")
         refresh(0.1, "Welcome!")
 
 def reward_amount(selection):   
@@ -351,6 +383,8 @@ def try_again(selection, true_ans):
         journey(selection)
 
 def learn():        # Main screen for learning path
+    global combo
+    combo = 0
     print("Choose a path, or press 'q' to return to the main menu")
     for index, skill in enumerate(skills):
         if skill == "ADDITION":
@@ -360,7 +394,7 @@ def learn():        # Main screen for learning path
     selection = input("")
     if selection == 'q':
         refresh(0.1, "Welcome!")
-    elif selection.isdigit and current_account.expertise[skills[index-1]] >= threshold:
+    elif selection.isdigit and (selection == '1' or current_account.expertise[skills[int(selection)-2]] >= threshold):
         journey(selection)
 
 def journey(selection):
@@ -374,6 +408,30 @@ def journey(selection):
                 success(selection)
             else:
                 try_again(selection, fst+snd)
+        elif selection == '2':   # Subtraction
+            fst = random.randint(0,9)
+            snd = random.randint(0,9)
+            ans = input(str(fst) + " - " + str(snd) + " = ")
+            if int(ans) == (fst - snd):
+                success(selection)
+            else:
+                try_again(selection, fst-snd)
+        elif selection == '3':  # Multiplication
+            fst = random.randint(0,9)
+            snd = random.randint(0,9)
+            ans = input(str(fst) + " x " + str(snd) + " = ")
+            if int(ans) == (fst * snd):
+                success(selection)
+            else:
+                try_again(selection, fst*snd)
+        elif selection == '4':  # Division
+            fst = random.randint(0,9)
+            snd = random.randint(1,9)
+            ans = input(str(fst) + " / " + str(snd) + " = ")
+            if int(ans) == (fst / snd):
+                success(selection)
+            else:
+                try_again(selection, fst/snd)
         else:
             refresh(0.1, "Welcome!")
 
@@ -382,18 +440,18 @@ def success(selection):
     combo += combo_increment
     reward = reward_amount(selection)
     current_account.expertise[skills[int(selection)-1]] += 1
-    if current_account.expertise[skills[int(selection)-1]] == 100 and len(skills) > int(selection) + 1:
+    if current_account.expertise[skills[int(selection)-1]] == threshold and len(skills) > int(selection) + 1:
         print("CONGRATULATIONS! You have unlocked the next skill!")
     if reward > 0:
         current_account.add(reward)
         save()
-        next = input("Correct! You have been given $" + colorama.Fore.GREEN + str(reward) + colorama.Fore.RESET + beep + " for your hard work. Press any key for another question, or 'q' to return to the main menu\n")
+        next = input("Correct! You have been given $" + colorama.Fore.GREEN + str(reward) + colorama.Fore.RESET + beep + " for your hard work. Press enter for another question, or 'q' to return to the main menu\n")
         if next == 'q':
             refresh(0.1, "Welcome!")
         else:
             journey(selection)            
     else:
-        next = input("Correct! Press any key for another question, or 'q' to return to the main menu\n")
+        next = input("Correct! Press enter for another question, or 'q' to return to the main menu\n")
         if next == 'q':
             refresh(0.1, "Welcome!")
         else:
