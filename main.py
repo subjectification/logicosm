@@ -14,8 +14,8 @@ skills = ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"]
 threshold = 100 # when to unlock next skill
 combo = 0       # increases chance of receiving reward
 combo_increment = 5
-base_chance = 10
-max_chance = 60
+base_chance = 40
+max_chance = 80
 beep = '\a'
 ranks = [colorama.Fore.YELLOW + "RECRUIT" + colorama.Fore.RESET,
     colorama.Fore.BLUE + "APPRENTICE" + colorama.Fore.RESET,
@@ -43,7 +43,7 @@ def hash(password):
 
 def save():
     file = open(os.path.join(path,current_account.name + ".acc"), "w")
-    file.write(str(current_account.password) + "\n")
+    #file.write(str(current_account.password) + "\n")
     file.write(str(current_account.balance) + "\n")
     for asset in current_account.portfolio:
         file.write("i," + asset + "," + str(current_account.portfolio[asset]) + "\n")
@@ -69,9 +69,9 @@ def find_mastery(xp):
         return colorama.Fore.RED + "Novice" + colorama.Fore.RESET
 
 class account:
-    def __init__(self, input, pas, bal):
+    def __init__(self, input, bal):
         self.name = input
-        self.password = pas
+        #self.password = pas
         self.balance = bal
         self.portfolio = {}
         self.expertise = {}
@@ -124,10 +124,10 @@ def read_accounts():
     for filename in os.listdir(path):
         if filename.endswith(".acc"):
             name = os.path.split(filename)[1].split(".")[0]
-            file = open(os.path.join(path, filename), "r")
-            pw = file.readline().rstrip()
-            accounts.append((name,pw)) # new addition
-            file.close()    
+            #file = open(os.path.join(path, filename), "r")
+            #pw = file.readline().rstrip()
+            accounts.append(name) # new addition
+            #file.close()    
 
 # clear the terminal
 def clear():
@@ -147,7 +147,7 @@ def load_account(name):
     global current_account
     filename = os.path.join(path, name) + ".acc"
     file = open(filename, "r")
-    current_account = account(name, file.readline().rstrip(), int(file.readline()))
+    current_account = account(name, int(file.readline()))
     for asset in investments:
         current_account.portfolio[asset] = 0
     for skill in skills:
@@ -155,23 +155,22 @@ def load_account(name):
     for line in file:
         lst = line.split(",")
         if lst[0] == 'i':
-            t = lst[1]
-            if t in investments:
-                current_account.portfolio[t] = int(lst[2])
+            if lst[1] in investments:
+                current_account.portfolio[lst[1]] = int(lst[2])
         elif lst[0] == 'e':
-            s = lst[1]
-            current_account.expertise[s] = int(lst[2])
+            if lst[1] in skills:
+                current_account.expertise[lst[1]] = int(lst[2])
     refresh(0.1, "Successfully logged in!")
 
 
 def createAcc():
     n = input("Please enter a name for the new account:")
-    if n.lower() in (name.lower() for (name,pw) in accounts):
+    if n.lower() in (name.lower() for name in accounts):
         refresh(0, "An account already exists with that name!")
     else:
-        pw = hash(input("Please enter a password for this account:"))
+        #pw = hash(input("Please enter a password for this account:"))
         global current_account
-        current_account = account(n, pw, 0)
+        current_account = account(n, 0)
         for asset in investments:
             current_account.portfolio[asset] = 0
         for skill in skills:
@@ -192,26 +191,27 @@ def quit():
 def select_account():
     if len(accounts) > 0:
         print ("\nWhich account would you like to access? Or press 'n' to create a new account")
-        for index,(name,truepw) in enumerate(accounts):
+        for index,name in enumerate(accounts):
             print(str(index + 1) + ": " + name)
         n = input("")
         if n == "n":
             createAcc()
         elif str.isdigit(n):
             if int(n)-1 <= len(accounts):
-                pw = hash(input("Please enter your password:"))
-                if pw == truepw:
-                    load_account(name)
-                else:
-                    refresh(0, "Incorrect password!")
-            refresh(0, "That account does not exist!")
-        elif n.lower() in (name.lower() for (name,pw) in accounts):
-            acc = [(x,y) for x,y in accounts if x.lower() == n.lower()]
-            pw = hash(input("Please enter your password:"))
-            if pw == acc[0][1]:
-                load_account(acc[0][0])
+                #pw = hash(input("Please enter your password:"))
+                #if pw == truepw:
+                load_account(name)
+                #else:
+                #    refresh(0, "Incorrect password!")
             else:
-                refresh(0, "Incorrect password!")
+                refresh(0, "That account does not exist!")
+        elif n.lower() in (name.lower() for (name,pw) in accounts):
+            acc = [x for x in accounts if x.lower() == n.lower()]
+            #pw = hash(input("Please enter your password:"))
+            #if pw == acc[0][1]:
+            load_account(acc[0])
+            #else:
+            #    refresh(0, "Incorrect password!")
         else:
             refresh(0, "I didn't understand what you wrote :(")
     else:
