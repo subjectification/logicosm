@@ -1,4 +1,4 @@
-# coding=<ascii>
+# coding=<uft-8>
 
 import datetime
 import math
