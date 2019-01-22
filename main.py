@@ -165,8 +165,8 @@ def load_account(name):
 
 
 def createAcc():
-    name = input("Please enter a name for the new account:")
-    if any(x.lower() == name.lower() for x in accounts):
+    n = input("Please enter a name for the new account:")
+    if n.lower() in (name.lower() for (name,pw) in accounts):
         refresh(0, "An account already exists with that name!")
     else:
         pw = hash(input("Please enter a password for this account:"))
