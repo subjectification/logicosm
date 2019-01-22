@@ -1,5 +1,3 @@
-# coding=<uft-8>
-
 import datetime
 import math
 import random
@@ -7,6 +5,7 @@ import os
 import sys
 import readchar
 import random
+import colorama
 
 accounts = []
 prizes = []
@@ -17,7 +16,7 @@ combo = 0       # increases chance of receiving reward
 combo_increment = 5
 base_chance = 10
 max_chance = 60         
-
+beep = '\a'
 
 if not os.path.exists("accounts"):
     os.mkdir("accounts")
@@ -114,7 +113,7 @@ def clear():
 
 # print the information associated with the current account
 def print_balance():
-    print ("\n" + current_account.name + "'s balance: \t$" + str(current_account.balance))
+    print ("\n" + current_account.name + "'s balance: \t$" + colorama.Fore.GREEN + str(current_account.balance) + colorama.Fore.RESET)
 
 def print_portfolio():
     print ("\n" + current_account.name + "'s portfolio:")
@@ -234,8 +233,11 @@ def interface(state):
                 refresh(0.1, "Sorry! That password was not correct!")
             else:
                 num = input("How much would you like to add?\n")
-                current_account.add(int(num))
-                refresh(0.1, "Successfully added $" + num + "!")
+                if num.isdigit():
+                    current_account.add(int(num))
+                    refresh(0.1, "Successfully added $" + num + "!")
+                else:
+                    refresh(0.1, "That is not a number!")
         elif inp == 'q':
             quit()
         else:
@@ -385,7 +387,7 @@ def success(selection):
     if reward > 0:
         current_account.add(reward)
         save()
-        next = input("Correct! You have been given $" + str(reward) + " for your hard work. Press any key for another question, or 'q' to return to the main menu\n")
+        next = input("Correct! You have been given $" + colorama.Fore.GREEN + str(reward) + colorama.Fore.RESET + beep + " for your hard work. Press any key for another question, or 'q' to return to the main menu\n")
         if next == 'q':
             refresh(0.1, "Welcome!")
         else:
