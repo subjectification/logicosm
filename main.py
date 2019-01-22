@@ -12,22 +12,10 @@ investments = ["FOOD", "HOUSE", "CLOTH"]
 skills = ["ADDITION"]
 threshold = 100 # when to unlock next skill
 combo = 0       # increases chance of receiving reward
-combo_increment = 2
+combo_increment = 5
 base_chance = 10
-max_chance = 60
-state = 0   # Which interface is displayed
-            # 0: Choose account
-            # 0.1: Main interface
-            # 1: TODO: Learning path?
-            # 2: TODO: Prizes?
-            # 3: Exchange main page
-            # 3.1: Exchange: buy investments
-            # 3.2 Exchange: sell investments
-            # 3.3 Exchange: history
-            # 4: TODO: Profile/achievements?
-            
-            
-status = "Welcome!"
+max_chance = 60         
+
 
 if not os.path.exists("accounts"):
     os.mkdir("accounts")
@@ -47,6 +35,16 @@ def hash(password):
     encrypted_int = [ord(a)^ord(b) for a,b in zip(password, key)]
     encrypted_string = "".join([str(a) for a in encrypted_int])
     return encrypted_string
+
+def save():
+    file = open(os.path.join(path,current_account.name + ".acc"), "w")
+    file.write(str(current_account.password) + "\n")
+    file.write(str(current_account.balance) + "\n")
+    for asset in current_account.portfolio:
+        file.write("i," + asset + "," + str(current_account.portfolio[asset]) + "\n")
+    for skill in current_account.expertise:
+        file.write("e," + skill + "," + str(current_account.expertise[skill]) + "\n")
+    file.close()
 
 class account:
     def __init__(self, input, pas, bal):
@@ -70,9 +68,9 @@ class account:
             self.subtract(price)
             self.portfolio[ticker] += number
             save()
-            return (3.1, "Successfully purchased " + str(number) + " " + ticker)
+            refresh(3.1, "Successfully purchased " + str(number) + " " + ticker)
         else:
-            return (3.1, "Sorry, you don't have enough money :(")
+            refresh(3.1, "Sorry, you don't have enough money :(")
     
     def sell(self, ticker, number):
         printAcc()
@@ -81,13 +79,12 @@ class account:
             self.subtract(number * calcPrice(ticker,0))
             self.portfolio[ticker] -= number
             save()
-            return (3.2, "Successfully sold " + number + " " + ticker)
+            refresh(3.2, "Successfully sold " + number + " " + ticker)
         else:
-            return (3.2, "You don't own that many :(")
+            refresh(3.2, "You don't own that many :(")
             
     def experience(self, skill, xp):
         self.expertise[skill] += xp
-
 
 def calcPrice(tick, history):
     today = datetime.datetime.now()
@@ -97,7 +94,6 @@ def calcPrice(tick, history):
         investments[0] : (num % 2) + 50,
         investments[1] : (num % 3) + 48,
         investments[2] : int(round(math.sin(num)* 6 + 50))}[tick]
-          
 
 def read_accounts():
     global accounts
@@ -109,7 +105,6 @@ def read_accounts():
             pw = file.readline().rstrip()
             accounts.append((name,pw)) # new addition
             file.close()    
-
 
 # clear the terminal
 def clear():
@@ -141,13 +136,13 @@ def load_account(name):
         elif lst[0] == 'e':
             s = lst[1]
             current_account.expertise[s] = int(lst[2])
-    return (0.1, "Successfully logged in!")
+    refresh(0.1, "Successfully logged in!")
 
 
 def createAcc():
     name = input("Please enter a name for the new account:")
     if any(x.lower() == name.lower() for x in accounts):
-        return (0, "An account already exists with that name!")
+        refresh(0, "An account already exists with that name!")
     else:
         pw = hash(input("Please enter a password for this account:"))
         global current_account
@@ -155,22 +150,12 @@ def createAcc():
         for asset in investments:
             current_account.portfolio[asset] = 0
         save()
-        return (0.1, "Successfully created account!")
+        refresh(0.1, "Successfully created account!")
 
 def printInvestments():
     print ("\nToday's investment prices:")
     for asset in investments:
         print (asset + ":\t\t\t" + str(calcPrice(asset,0)))
-
-def save():
-    file = open(os.path.join(path,current_account.name + ".acc"), "w")
-    file.write(str(current_account.password) + "\n")
-    file.write(str(current_account.balance) + "\n")
-    for asset in current_account.portfolio:
-        file.write("i," + asset + "," + str(current_account.portfolio[asset]) + "\n")
-    for skill in current_account.expertise:
-        file.write("e," + skill + "," + str(current_account.expertise[skill]) + "\n")
-    file.close()
 
 def quit():
     save()
@@ -184,27 +169,27 @@ def select_account():
             print(str(index + 1) + ": " + name)
         n = input("")
         if n == "n":
-            return createAcc()
+            createAcc()
         elif str.isdigit(n):
             if int(n)-1 <= len(accounts):
                 pw = hash(input("Please enter your password:"))
                 if pw == truepw:
-                    return load_account(name)
+                    load_account(name)
                 else:
-                    return (0, "Incorrect password!")
-            return (0, "That account does not exist!")
+                    refresh(0, "Incorrect password!")
+            refresh(0, "That account does not exist!")
         elif n.lower() in (name.lower() for (name,pw) in accounts):
             acc = [(x,y) for x,y in accounts if x.lower() == n.lower()]
             pw = hash(input("Please enter your password:"))
             if pw == acc[0][1]:
-                return load_account(acc[0][0])
+                load_account(acc[0][0])
             else:
-                return (0, "Incorrect password!")
+                refresh(0, "Incorrect password!")
         else:
-            return (0, "I didn't understand what you wrote :(")
+            refresh(0, "I didn't understand what you wrote :(")
     else:
         print("\nNo accounts detected!")
-        return createAcc()
+        createAcc()
 
 def printHistory(days):
     for asset in investments:
@@ -220,41 +205,39 @@ def read_prizes():
         info = line.split(",")
         prizes.append((info[0],info[1].rstrip()))
 
-def refresh():
+def refresh(state, status):
     clear()
-    global status
-    global state
     print(status)
-    (state, status) = interface()
+    interface(state)
 
-def interface():
+def interface(state):
     if state == 0:          # account not selected
         read_accounts()
-        return select_account()
+        select_account()
     elif state == 0.1:           # account selected, main screen
         print_balance()
         print("\n1:\tLearning path\n2:\tPrize shop\n3:\tExchange market\n4:\tAchievements\n5:\tAdd money\n\nOr press 'q' to save and quit\n")
         inp = input("")
         if inp == '1':
-            return(1, "Learning path")
+            refresh(1, "Learning path")
         elif inp == '2':
-            return (2,"Prize shop")
+            refresh(2,"Prize shop")
         elif inp == '3':
-            return (3, "Exchange market")
+            refresh(3, "Exchange market")
         elif inp == '4':
-            return (4, "Acievements have not yet been built")
+            refresh(4, "Acievements have not yet been built")
         elif inp == '5':
             pw = input("Please enter the password to access this feature:")
             if pw != password:
-                return (0.1, "Sorry! That password was not correct!")
+                refresh(0.1, "Sorry! That password was not correct!")
             else:
                 num = input("How much would you like to add?\n")
-                current_account.balance += int(num)
-                return (0.1, "Successfully added $" + num + "!")
+                current_account.add(int(num))
+                refresh(0.1, "Successfully added $" + num + "!")
         elif inp == 'q':
             quit()
         else:
-            return (0.1, "I don't know what that means!")
+            refresh(0.1, "I don't know what that means!")
     elif state == 1:          # Learning path
         learn()
     elif state == 2:          #prizes
@@ -263,16 +246,16 @@ def interface():
         print_balance()
         t = input("\nWhich prize would you like to buy? Or, press 'q' to return to the main menu\n")
         if t == 'q':
-            return (0.1, "Welcome!")
-        elif t.isdigit() and int(t-1) < len(prizes):
-            price = int(prizes[int(t-1)][1])
+            refresh(0.1, "Welcome!")
+        elif t.isdigit() and int(t)-1 < len(prizes):
+            price = int(prizes[int(t)-1][1])
             if current_account.balance >= price:
                 current_account.subtract(price)
-                return (2, "Successfully bought " + prizes[int(t-1)][0])
+                refresh(2, "Successfully bought " + prizes[int(t)-1][0])
             else:
-                return (2, "You can't afford that prize!")
+                refresh(2, "You can't afford that prize!")
         else:
-            return (2, "That isn't an input I recognise :(")
+            refresh(2, "That isn't an input I recognise :(")
                     
     elif state == 3:       # Exchange market
         printInvestments()
@@ -280,67 +263,70 @@ def interface():
         print_portfolio()
         inp = input("Press 'b' to buy, 's' to sell, 'h' to check the history of prices, or 'q' to return to the main screen\n")
         if inp == 'b':
-            return (3.1, "Exchange market: buying")
+            refresh(3.1, "Exchange market: buying")
         elif inp == 's':
-            return (3.2, "Exchange market: selling")
+            refresh(3.2, "Exchange market: selling")
         elif inp == "h":
-            return (3.3, "Exchange market: history")
+            refresh(3.3, "Exchange market: history")
         elif inp == "q":
-            return (0.1, "Welcome!")
+            refresh(0.1, "Welcome!")
         else:
-            return (3, "I don't know what you want to do :(")
+            refresh(3, "I don't know what you want to do :(")
     elif state == 3.1:      #Exchange: buying
         printInvestments()
         print_balance()
         inp = input("What would you like to buy? Or press 'e' to return to the main exchange market, or 'q' to return to the main menu\n")
         if inp == 'e':
-            return (3, "Exchange market")
+            refresh(3, "Exchange market")
         elif inp == 'q':
-            return (0.1, "Welcome!")
+            refresh(0.1, "Welcome!")
         elif inp.isdigit() and int(inp) < len(investments):
             n = input("How much " + investments[int(imp)] + " would you like to buy?\n")
-            return current_account.buy(inp, int(n))
+            current_account.buy(inp, int(n))
         elif inp.upper() in investments:
             n = input("How much " + inp.upper() + " would you like to buy?\n")
-            return current_account.buy(inp.upper(), int(n))
+            current_account.buy(inp.upper(), int(n))
         else:
-            return (3.1, "I don't know what that is :(")
+            refresh(3.1, "I don't know what that is :(")
     elif state == 3.2:       #Exchange: selling
         printInvestments()
         print_portfolio()
         inp = input("What would you like to sell? Or press 'e' to return to the main exchange market, or 'q' to return to the main menu\n")
         if inp == 'e':
-            return (3, "Exchange market")
+            refresh(3, "Exchange market")
         elif inp == 'q':
-            return (0.1, "Welcome!")
+            refresh(0.1, "Welcome!")
         elif inp.isdigit() and int(inp) <= len(investments):
             n = input("How much " + investments[int(inp)] + " would you like to sell?\n")
-            return current_account.sell(inp, int(n))
+            current_account.sell(inp, int(n))
         elif inp.upper() in investments:
             n = input("How much " + inp.upper() + " would you like to sell?\n")
-            return current_account.sell(inp.upper(), int(n))
+            current_account.sell(inp.upper(), int(n))
         else:
-            return (3.2, "I don't know what that is :(")
+            refresh(3.2, "I don't know what that is :(")
     elif state == 3.3:      #price history
         l = input("Select a number of days to look back on, press 'e' to go back to the exchange market, or press 'q' to go back to the main menu\n")
         if l == 'q':
-            return (0.1, "Welcome!")
+            refresh(0.1, "Welcome!")
         elif l == 'e':
-            return (3, "Exchange market")
+            refresh(3, "Exchange market")
         else:
             if str.isdigit(l):
                 printHistory(int(l))
             else:
-                return (3.3, "Please enter a number!")
+                refresh(3.3, "Please enter a number!")
         inp = input("Press 'e' to return to the exchange market, 'q' to return to the main menu, or 'h' to check the history again:")
         if inp == 'e':
-            return (3, "Exchange market")
+            refresh(3, "Exchange market")
         elif inp == 'q':
-            return (0.1, "Welcome!")
+            refresh(0.1, "Welcome!")
         elif inp == 'h':
-            return (3.3, "Exchange: price history")
+            refresh(3.3, "Exchange: price history")
         else:
-            return (3.3, "I don't know what that means :(")
+            refresh(3.3, "I don't know what that means :(")
+    elif state == 4:        #Acievements
+        next = input("Achievements are not yet available. Press any key to return to the main menu.")
+        refresh(0.1, "Welcome!")
 
 def reward_amount(selection):   
     global combo
@@ -353,19 +339,14 @@ def reward_amount(selection):
 
 def try_again(selection, true_ans):
     global combo
-    global state
-    global status
     combo = 0
     next = input("The correct answer is " + str(true_ans) + ". Press any key to try again, or 'q' to return to the main menu\n")
     if next == 'q':
-        state, status = (0.1, "Welcome!")
-        interface()
+        refresh(0.1, "Welcome!")
     else:
         journey(selection)
 
 def learn():        # Main screen for learning path
-    global state
-    global status
     print("Choose a path, or press 'q' to return to the main menu")
     for index, skill in enumerate(skills):
         if skill == "ADDITION":
@@ -374,8 +355,7 @@ def learn():        # Main screen for learning path
             print(str(index+1) + ": " + skill)
     selection = input("")
     if selection == 'q':
-        state, status = (0.1, "Welcome!")
-        refresh()
+        refresh(0.1, "Welcome!")
     elif selection.isdigit and current_account.expertise[skills[index-1]] >= threshold:
         journey(selection)
 
@@ -391,12 +371,10 @@ def journey(selection):
             else:
                 try_again(selection, fst+snd)
         else:
-            refresh()
+            refresh(0.1, "Welcome!")
 
 def success(selection):
     global combo
-    global state
-    global status
     combo += combo_increment
     reward = reward_amount(selection)
     current_account.expertise[skills[int(selection)-1]] += 1
@@ -407,20 +385,16 @@ def success(selection):
         save()
         next = input("Correct! You have been given $" + str(reward) + " for your hard work. Press any key for another question, or 'q' to return to the main menu\n")
         if next == 'q':
-            state, status = (0.1, "Welcome!")
-            refresh()
+            refresh(0.1, "Welcome!")
         else:
             journey(selection)            
     else:
         next = input("Correct! Press any key for another question, or 'q' to return to the main menu\n")
         if next == 'q':
-            state, status = (0.1, "Welcome!")
-            refresh()
+            refresh(0.1, "Welcome!")
         else:
             journey(selection) 
 
 
 read_prizes()
-
-while True:
-    refresh()
+refresh(0, "Welcome!")

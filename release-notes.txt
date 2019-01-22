@@ -3,11 +3,19 @@ Features:
 Account creation
 Passwords
 Exchange market
+Spending catalogue
 
 Planned:
 
-Adjust exchange formulas
-Spending catalogue
-Learning track from addition to machine learning (arithmetic/probability/sequences)
 Achievements
 
+Learning track from addition to machine learning:
+Addition
+subtraction
+multiplication
+(p)exponents
+division
+(p)probability
+(p)functions
+(p)vectors as mathematical objects
+...
