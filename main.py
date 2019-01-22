@@ -55,7 +55,7 @@ class account:
         self.balance = bal
         self.portfolio = {}
         self.expertise = {}
-	
+
     def add(self, amount):
         self.balance += amount
         save()
