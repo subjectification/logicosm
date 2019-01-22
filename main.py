@@ -171,7 +171,7 @@ def createAcc():
     else:
         pw = hash(input("Please enter a password for this account:"))
         global current_account
-        current_account = account(name, pw, 0)
+        current_account = account(n, pw, 0)
         for asset in investments:
             current_account.portfolio[asset] = 0
         for skill in skills:
@@ -404,6 +404,8 @@ def journey(selection):
             fst = random.randint(0,9)
             snd = random.randint(0,9)
             ans = input(str(fst) + " + " + str(snd) + " = ")
+            while not ans.isdigit():
+                ans = input("Please enter a number:")
             if int(ans) == (fst + snd):
                 success(selection)
             else:
@@ -412,6 +414,8 @@ def journey(selection):
             fst = random.randint(0,9)
             snd = random.randint(0,9)
             ans = input(str(fst) + " - " + str(snd) + " = ")
+            while not ans.isdigit():
+                ans = input("Please enter a number:")
             if int(ans) == (fst - snd):
                 success(selection)
             else:
@@ -420,6 +424,8 @@ def journey(selection):
             fst = random.randint(0,9)
             snd = random.randint(0,9)
             ans = input(str(fst) + " x " + str(snd) + " = ")
+            while not ans.isdigit():
+                ans = input("Please enter a number:")
             if int(ans) == (fst * snd):
                 success(selection)
             else:
@@ -428,6 +434,8 @@ def journey(selection):
             fst = random.randint(0,9)
             snd = random.randint(1,9)
             ans = input(str(fst) + " / " + str(snd) + " = ")
+            while not ans.isdigit():
+                ans = input("Please enter a number:")
             if int(ans) == (fst / snd):
                 success(selection)
             else:
