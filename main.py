@@ -1,3 +1,5 @@
+# coding=<ascii>
+
 import datetime
 import math
 import random
