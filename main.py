@@ -4,10 +4,17 @@ import random
 import os
 import sys
 import readchar
+import random
 
 accounts = []
 prizes = []
 investments = ["FOOD", "HOUSE", "CLOTH"]
+skills = ["ADDITION"]
+threshold = 100 # when to unlock next skill
+combo = 0       # increases chance of receiving reward
+combo_increment = 2
+base_chance = 10
+max_chance = 60
 state = 0   # Which interface is displayed
             # 0: Choose account
             # 0.1: Main interface
@@ -110,7 +117,7 @@ def clear():
 
 # print the information associated with the current account
 def print_balance():
-    print ("\n" + current_account.name + "'s balance: \t" + str(current_account.balance))
+    print ("\n" + current_account.name + "'s balance: \t$" + str(current_account.balance))
 
 def print_portfolio():
     print ("\n" + current_account.name + "'s portfolio:")
@@ -174,12 +181,12 @@ def select_account():
     if len(accounts) > 0:
         print ("\nWhich account would you like to access? Or press 'n' to create a new account")
         for index,(name,truepw) in enumerate(accounts):
-            print(str(index) + ": " + name)
+            print(str(index + 1) + ": " + name)
         n = input("")
         if n == "n":
             return createAcc()
         elif str.isdigit(n):
-            if int(n) <= len(accounts):
+            if int(n)-1 <= len(accounts):
                 pw = hash(input("Please enter your password:"))
                 if pw == truepw:
                     return load_account(name)
@@ -203,7 +210,7 @@ def printHistory(days):
     for asset in investments:
         print (asset + " prices: ")
         for i in range(-1*days,-1):
-            print (str(calcPrice(asset,i)) + ", ", end="")
+            print (str(calcPrice(asset,i)), end=", ")
         print(str(calcPrice(asset,0)))
         
 def read_prizes():
@@ -229,7 +236,7 @@ def interface():
         print("\n1:\tLearning path\n2:\tPrize shop\n3:\tExchange market\n4:\tAchievements\n5:\tAdd money\n\nOr press 'q' to save and quit\n")
         inp = input("")
         if inp == '1':
-            return(1, "Learning path has not yet been built")
+            return(1, "Learning path")
         elif inp == '2':
             return (2,"Prize shop")
         elif inp == '3':
@@ -249,21 +256,19 @@ def interface():
         else:
             return (0.1, "I don't know what that means!")
     elif state == 1:          # Learning path
-        t =  input("Press any key to return to the main screen\n")
-        return (0.1, "Check back soon for learning path")
-
+        learn()
     elif state == 2:          #prizes
         for index, (prize, price) in enumerate(prizes):
-            print(str(index) + ":\t" + prize + " for $" + price)
+            print(str(index+1) + ":\t" + prize + " for $" + price)
         print_balance()
         t = input("\nWhich prize would you like to buy? Or, press 'q' to return to the main menu\n")
         if t == 'q':
             return (0.1, "Welcome!")
-        elif t.isdigit() and int(t) < len(prizes):
-            price = int(prizes[int(t)][1])
+        elif t.isdigit() and int(t-1) < len(prizes):
+            price = int(prizes[int(t-1)][1])
             if current_account.balance >= price:
                 current_account.subtract(price)
-                return (2, "Successfully bought " + prizes[int(t)][0])
+                return (2, "Successfully bought " + prizes[int(t-1)][0])
             else:
                 return (2, "You can't afford that prize!")
         else:
@@ -336,8 +341,85 @@ def interface():
             return (3.3, "Exchange: price history")
         else:
             return (3.3, "I don't know what that means :(")
+
+def reward_amount(selection):   
+    global combo
+    roll = random.randint(0,100) + min(combo, max_chance - base_chance)
+    if roll > (100 - base_chance):
+        return int(selection)
+    else:
+        return 0
     
-    
+
+def try_again(selection, true_ans):
+    global combo
+    global state
+    global status
+    combo = 0
+    next = input("The correct answer is " + str(true_ans) + ". Press any key to try again, or 'q' to return to the main menu\n")
+    if next == 'q':
+        state, status = (0.1, "Welcome!")
+        interface()
+    else:
+        journey(selection)
+
+def learn():        # Main screen for learning path
+    global state
+    global status
+    print("Choose a path, or press 'q' to return to the main menu")
+    for index, skill in enumerate(skills):
+        if skill == "ADDITION":
+            print(str(index+1) + ": " + skill)
+        elif current_account.expertise[skills[index-1]] >= threshold:
+            print(str(index+1) + ": " + skill)
+    selection = input("")
+    if selection == 'q':
+        state, status = (0.1, "Welcome!")
+        refresh()
+    elif selection.isdigit and current_account.expertise[skills[index-1]] >= threshold:
+        journey(selection)
+
+def journey(selection):
+    while True:
+        clear()
+        if selection == '1':    # Addition
+            fst = random.randint(0,9)
+            snd = random.randint(0,9)
+            ans = input(str(fst) + " + " + str(snd) + " = ")
+            if int(ans) == (fst + snd):
+                success(selection)
+            else:
+                try_again(selection, fst+snd)
+        else:
+            refresh()
+
+def success(selection):
+    global combo
+    global state
+    global status
+    combo += combo_increment
+    reward = reward_amount(selection)
+    current_account.expertise[skills[int(selection)-1]] += 1
+    if current_account.expertise[skills[int(selection)-1]] == 100 and len(skills) > int(selection) + 1:
+        print("CONGRATULATIONS! You have unlocked the next skill!")
+    if reward > 0:
+        current_account.add(reward)
+        save()
+        next = input("Correct! You have been given $" + str(reward) + " for your hard work. Press any key for another question, or 'q' to return to the main menu\n")
+        if next == 'q':
+            state, status = (0.1, "Welcome!")
+            refresh()
+        else:
+            journey(selection)            
+    else:
+        next = input("Correct! Press any key for another question, or 'q' to return to the main menu\n")
+        if next == 'q':
+            state, status = (0.1, "Welcome!")
+            refresh()
+        else:
+            journey(selection) 
+
+
 read_prizes()
 
 while True:
