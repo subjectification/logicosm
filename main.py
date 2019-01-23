@@ -403,7 +403,9 @@ def journey(selection):
             snd = random.randint(0,9)
             ans = input(str(fst) + " + " + str(snd) + " = ")
             while not ans.isdigit():
-                ans = input("Please enter a number:")
+                clear()
+                print("Please enter a number:")
+                ans = (str(fst) + " + " + str(snd) + " = ")
             if int(ans) == (fst + snd):
                 success(selection)
             else:
@@ -413,7 +415,9 @@ def journey(selection):
             snd = random.randint(0,9)
             ans = input(str(fst) + " - " + str(snd) + " = ")
             while not ans.isdigit():
-                ans = input("Please enter a number:")
+                clear()
+                print("Please enter a number:")
+                ans = (str(fst) + " - " + str(snd) + " = ")
             if int(ans) == (fst - snd):
                 success(selection)
             else:
@@ -423,7 +427,9 @@ def journey(selection):
             snd = random.randint(0,9)
             ans = input(str(fst) + " x " + str(snd) + " = ")
             while not ans.isdigit():
-                ans = input("Please enter a number:")
+                clear()
+                print("Please enter a number:")
+                ans = (str(fst) + " x " + str(snd) + " = ")
             if int(ans) == (fst * snd):
                 success(selection)
             else:
@@ -433,7 +439,9 @@ def journey(selection):
             snd = random.randint(1,9)
             ans = input(str(fst) + " / " + str(snd) + " = ")
             while not ans.isdigit():
-                ans = input("Please enter a number:")
+                clear()
+                print("Please enter a number:")
+                ans = (str(fst) + " / " + str(snd) + " = ")
             if int(ans) == (fst / snd):
                 success(selection)
             else:
@@ -451,7 +459,7 @@ def success(selection):
     if reward > 0:
         current_account.add(reward)
         save()
-        next = input("Correct! You have been given $" + colorama.Fore.GREEN + str(reward) + colorama.Fore.RESET + beep + " for your hard work. Press enter for another question, or 'q' to return to the main menu\n")
+        next = input("Correct! You have been given $" + colorama.Fore.GREEN + str(reward) + colorama.Fore.RESET + beep + " for your hard work. Your balance is now $" + colorama.Fore.GREEN + str(current_account.balance) + colorama.Fore.RESET + ". Press enter for another question, or 'q' to return to the main menu\n")
         if next == 'q':
             refresh(0.1, "Welcome!")
         else:
