@@ -17,6 +17,7 @@ skills = ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"]
 threshold = 100 # when to unlock next skill
 combo = 0       # increases chance of receiving reward
 combo_increment = 5
+current_skill = skills[0]
 base_chance = 10
 max_chance = 60
 beep = '\a'
@@ -39,7 +40,6 @@ password = "abc"
 
 def save():
     file = open(os.path.join(path,current_account.name + ".acc"), "w")
-    file.write(str(current_account.password) + "\n")
     file.write(str(current_account.balance) + "\n")
     for asset in current_account.portfolio:
         file.write("i," + asset + "," + str(current_account.portfolio[asset]) + "\n")
@@ -106,22 +106,23 @@ def load_account(name):
         elif lst[0] == 'e':
             s = lst[1]
             current_account.expertise[s] = int(lst[2])
-    print("logged into " + current_account.name)
-    global main_screen
-    main_screen = create_screen()
-    add_label(main_screen, current_account.name)
-    add_label(main_screen, str(current_account.balance))
-    login_screen.destroy()
-    main_screen.tkraise()
-    #refresh(0.1, "Successfully logged in!")
+    raise_main()
 
-def createAcc(n):
-    #n = input("Please enter a name for the new account:")
+def raise_main():
+    global name_label
+    global balance_label
+    name_label = Label(main_screen, text=current_account.name)
+    balance_label = Label(main_screen, text = str(current_account.balance))
+    name_label.grid(row=0,column = 1)
+    balance_label.grid(row=1,column=1)
+    main_screen.tkraise()
+
+def createAcc():
+    n = name_entry.get()
     if n.lower() in (name.lower() for name in accounts):
-        save()
-        #refresh(0, "An account already exists with that name!")
+        tk.messagebox.showerror("Error", "That account name already exists, please choose a unique name")
+        name_entry.delete(0,END)
     else:
-        #pw = hash(input("Please enter a password for this account:"))
         global current_account
         current_account = account(n, 0)
         for asset in investments:
@@ -129,7 +130,7 @@ def createAcc(n):
         for skill in skills:
             current_account.expertise[skill] = 0
         save()
-        #refresh(0.1, "Successfully created account!")
+        raise_main()
 
 def read_accounts():
     global accounts
@@ -137,76 +138,110 @@ def read_accounts():
     for filename in os.listdir(path):
         if filename.endswith(".acc"):
             name = os.path.split(filename)[1].split(".")[0]
-            #file = open(os.path.join(path, filename), "r")
-            #pw = file.readline().rstrip()
-            accounts.append(name) # new addition
-            #file.close() 
+            accounts.append(name)
 
+def learn():
+    learning_activity.tkraise()
+    fst = random.randint(0,9)
+    snd = random.randint(0,9)
+    q = ""
+    if current_skill == '1':    # Addition
+        q = str(fst) + " + " + str(snd) + " = ?"
+        ans = fst+snd
+    elif current_skill == '2':   # Subtraction
+        q = str(fst) + " - " + str(snd) + " = ?"
+        ans = fst-snd
+    elif current_skill == '3':  # Multiplication
+        q = str(fst) + " x " + str(snd) + " = ?"
+        ans = fst*snd
+    elif current_skill == '4':  # Division
+        snd = random.randint(1,9)
+        q = str(fst) + " / " + str(snd) + " = ?"
+        ans = fst/snd
+    global question
+    question = Label(learning_activity, text=q)
+    question.grid(row=0,column=0)
+    global answer
+    answer = Entry(learning_activity)
+    answer.grid(row=1,column=0)
+
+def check_answer: #TODO
+
+def another_question: #TODO
+
+def back_to_learning: #TODO
 
 ###GUI
 
 root = Tk()
 
-def hello():
-    print("hello!")
-
-menubar = Menu(root)
 
 # login screen
-
-login_screen = Frame(root, background = "", height = HEIGHT, width = WIDTH)
-login_screen.pack()
+login_screen = Frame(root)
+login_screen.grid(row=0,column=0,sticky='news')
 
 # Account list
 account_list = Listbox(login_screen)
-account_list.pack(side = "left")
 read_accounts()
 for name in accounts:
-    print (name)
     account_list.insert(END, name)
+account_list.grid(row=0,column=0, rowspan=2)
 
 # Login button
-login_button = Button(login_screen, text = "Log in", command = lambda: load_account(accounts[account_list.curselection()[0]]))
-login_button.pack()
+Button(login_screen, text = "Log in", command = lambda: load_account(accounts[account_list.curselection()[0]])).grid(row=0,column=1)
 
-# New account button
-new_account_button = Button(login_screen, text = "New account", command = createAcc)
-new_account_button.pack()
+# Create account screen
+create_acc_screen = Frame(root)
+create_acc_screen.grid(row=0,column=0,sticky='news')
 
-# main screen
-def create_screen():
-    screen = Frame(root, background = "", height = HEIGHT, width = WIDTH)
-    screen.pack()
-    return screen
+# Create Account button (on login screen)
+Button(login_screen, text = "Create account", command = create_acc_screen.tkraise).grid(row=1,column=1)
 
-def add_label(master, str):
-    label = Label(master, textvariable = str)
-    label.pack()
-    return label
+# Create account button (on create account screen)
+Button(create_acc_screen, text="Create account!", command = createAcc).grid(row=1,column=0)
 
+# Name text entry field
+name_entry = Entry(create_acc_screen)
+name_entry.grid(row=0,column=0)
 
-# create a pulldown menu, and add it to the menu bar
-filemenu = Menu(menubar, tearoff=0)
-filemenu.add_command(label="Open", command=hello)
-filemenu.add_command(label="Save", command=hello)
-filemenu.add_separator()
-filemenu.add_command(label="Exit", command=root.quit)
-menubar.add_cascade(label="File", menu=filemenu)
+# Main screen
+main_screen = Frame(root)
+main_screen.grid(row=0,column=0,sticky='news')
 
-# create more pulldown menus
-editmenu = Menu(menubar, tearoff=0)
-editmenu.add_command(label="Cut", command=hello)
-editmenu.add_command(label="Copy", command=hello)
-editmenu.add_command(label="Paste", command=hello)
-menubar.add_cascade(label="Edit", menu=editmenu)
-
-helpmenu = Menu(menubar, tearoff=0)
-helpmenu.add_command(label="About", command=hello)
-menubar.add_cascade(label="Help", menu=helpmenu)
+# Main to learning button
+Button(main_screen, text="Learning path", command = learning_main.tkraise).grid(row=0,column=0)
 
 
+# Learning main screen
+learning_main = Frame(main_screen)
+learning_main.grid(row=0,column=0,sticky="NEWS")
 
-# display the menu
-root.config(menu=menubar)
+#Learning screen button(s)
+for index,skill in enumerate(skills):
+    if skill == "ADDITION":
+        Button(learning_main, text=skill, command=lambda: learn(skill)).grid(row=index, column=0)
+    elif current_account.expertise[skills[index-1]] >= threshold:
+        Button(learning_main, text=skill, command=lambda: learn(skill)).grid(row=index, column=0)
 
+# Learning activity screen
+learning_activity = Frame(learning_main)
+learning_activity.grid(row=0, column=0, sticky="NEWS")
+
+# Learning activity buttons
+Button(learning_activity, text="Check answer", command = check_answer).grid(row=0,column=1)
+Button(learning_activity, text="Another question", command = another_question).grid(row=1,column=1)
+Button(learning_activity, text="Go back", command = back_to_learning).grid(row=2,column=1)
+
+# Main to prizes button
+Button(main_screen, text="Prizes", command = prizes_main.tkraise).grid(row=1,column=0)
+
+# Main to exchange button
+Button(main_screen, text="Exchange", command = exchange_main.tkraise).grid(row=2,column=0)
+
+# Main to Achievements button
+Button(main_screen, text="Achievements", command = achievements_main.tkraise).grid(row=3,column=0)
+
+
+
+login_screen.tkraise()
 root.mainloop()
