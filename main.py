@@ -7,6 +7,7 @@ import readchar
 import random
 import colorama
 
+
 accounts = []
 prizes = []
 investments = ["FOOD", "HOUSE", "CLOTH"]
@@ -29,9 +30,6 @@ if not os.path.exists("accounts"):
 path = os.path.abspath("accounts")
 
 password = "abc"
-
-
-
 
 #nowdate = datetime.datetime.strptime(nowstring, "%Y-%m-%d %H:%M:%S.%f")
 
